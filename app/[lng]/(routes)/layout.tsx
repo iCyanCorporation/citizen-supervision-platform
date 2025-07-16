@@ -1,5 +1,3 @@
-import Header from "@/components/custom/Header";
-import Footer from "@/components/custom/Footer";
 import AnimatedBackground from "@/components/custom/AnimatedBackground";
 import { ThemeProvider } from "@/components/common/theme-provider";
 
@@ -22,9 +20,7 @@ export default async function ContentLayout({
       <div className="relative min-h-screen w-full flex flex-col">
         <AnimatedBackground />
         <div className="relative z-10 m-auto w-full flex flex-col min-h-screen">
-          <Header lng={lng} />
           <main className="flex-1 w-full m-auto">{children}</main>
-          <Footer />
         </div>
       </div>
     </ThemeProvider>
