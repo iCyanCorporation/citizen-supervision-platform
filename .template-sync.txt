@@ -1,0 +1,14 @@
+amplify/
+
+app/[lng]/(auth)/
+
+app/api/
+app/contexts/
+
+components/common/
+components/ui/
+
+hooks/
+lib/
+utils/
+types/
