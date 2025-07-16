@@ -5,7 +5,6 @@ Amplify.configure(outputs, { ssr: true });
 import outputs from "@/amplify_outputs.json";
 
 // Components
-import { Toaster } from "@/components/ui/toaster";
 
 // Google
 import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
@@ -22,7 +21,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} bg-background`}>
         {children}
-        <Toaster />
 
         {/* Google tags */}
         {/* <GoogleTagManager gtmId="GTM-xxx" />
