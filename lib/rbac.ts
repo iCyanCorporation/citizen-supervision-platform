@@ -35,60 +35,47 @@ export enum Permission {
   VIEW_OWN_SUPERVISION = "VIEW_OWN_SUPERVISION",
 }
 
-// Define role permissions mapping
-const rolePermissions: Record<UserRole, Permission[]> = {
-  [UserRole.CITIZEN]: [
-    Permission.VIEW_CIVIL_SERVANTS,
-    Permission.CREATE_SUPERVISION,
-    Permission.CREATE_OBLIGATION,
-    Permission.CREATE_KPI,
-    Permission.UPDATE_OWN_PROFILE,
-    Permission.EARN_POINTS,
-    Permission.SPEND_POINTS,
-  ],
+// Define base permissions for each role
+const citizenPermissions: Permission[] = [
+  Permission.VIEW_CIVIL_SERVANTS,
+  Permission.CREATE_SUPERVISION,
+  Permission.CREATE_OBLIGATION,
+  Permission.CREATE_KPI,
+  Permission.UPDATE_OWN_PROFILE,
+  Permission.EARN_POINTS,
+  Permission.SPEND_POINTS,
+];
 
-  [UserRole.MODERATOR]: [
-    // Include all citizen permissions
-    ...(rolePermissions[UserRole.CITIZEN] || []),
-    Permission.MODERATE_CONTENT,
-    Permission.VERIFY_EVIDENCE,
-    Permission.MANAGE_REPORTS,
-  ],
-
-  [UserRole.ADMIN]: [
-    // Include all moderator permissions
-    ...(rolePermissions[UserRole.MODERATOR] || []),
-    Permission.MANAGE_USERS,
-    Permission.MANAGE_CIVIL_SERVANTS,
-    Permission.MANAGE_SYSTEM_SETTINGS,
-    Permission.VIEW_ANALYTICS,
-    Permission.MANAGE_REWARDS,
-  ],
-
-  [UserRole.CIVIL_SERVANT]: [
-    Permission.UPDATE_OWN_OBLIGATIONS,
-    Permission.UPDATE_OWN_KPIS,
-    Permission.VIEW_OWN_SUPERVISION,
-    Permission.UPDATE_OWN_PROFILE,
-  ],
-};
-
-// Fix the circular dependency by defining permissions after roles
-rolePermissions[UserRole.MODERATOR] = [
-  ...rolePermissions[UserRole.CITIZEN],
+const moderatorPermissions: Permission[] = [
+  ...citizenPermissions,
   Permission.MODERATE_CONTENT,
   Permission.VERIFY_EVIDENCE,
   Permission.MANAGE_REPORTS,
 ];
 
-rolePermissions[UserRole.ADMIN] = [
-  ...rolePermissions[UserRole.MODERATOR],
+const adminPermissions: Permission[] = [
+  ...moderatorPermissions,
   Permission.MANAGE_USERS,
   Permission.MANAGE_CIVIL_SERVANTS,
   Permission.MANAGE_SYSTEM_SETTINGS,
   Permission.VIEW_ANALYTICS,
   Permission.MANAGE_REWARDS,
 ];
+
+const civilServantPermissions: Permission[] = [
+  Permission.UPDATE_OWN_OBLIGATIONS,
+  Permission.UPDATE_OWN_KPIS,
+  Permission.VIEW_OWN_SUPERVISION,
+  Permission.UPDATE_OWN_PROFILE,
+];
+
+// Define role permissions mapping
+const rolePermissions: Record<UserRole, Permission[]> = {
+  [UserRole.CITIZEN]: citizenPermissions,
+  [UserRole.MODERATOR]: moderatorPermissions,
+  [UserRole.ADMIN]: adminPermissions,
+  [UserRole.CIVIL_SERVANT]: civilServantPermissions,
+};
 
 /**
  * Check if a user role has a specific permission

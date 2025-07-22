@@ -69,7 +69,9 @@ export async function initializeUserData(userId: string): Promise<UserData> {
         }),
         dashboardLayout: JSON.stringify({ layout: "default" }),
       });
-      preferences = newPrefs;
+      if (newPrefs) {
+        preferences = newPrefs;
+      }
     }
 
     return {

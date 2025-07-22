@@ -90,7 +90,9 @@ export default function UserPreferences() {
           notifications: JSON.stringify(defaultNotificationPreferences),
           dashboardLayout: JSON.stringify({ layout: "default" }),
         });
-        prefsRecord = newPrefs;
+        if (newPrefs) {
+          prefsRecord = newPrefs;
+        }
       }
 
       if (prefsRecord) {

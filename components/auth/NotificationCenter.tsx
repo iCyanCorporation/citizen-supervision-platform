@@ -131,12 +131,12 @@ export default function NotificationCenter({
             {notifications.map((notification, index) => (
               <div key={notification.id}>
                 <div
-                  className={`p-4 border-l-4 ${getNotificationColor(notification.type)} hover:bg-muted/50 transition-colors`}
+                  className={`p-4 border-l-4 ${getNotificationColor(notification.type || "SYSTEM")} hover:bg-muted/50 transition-colors`}
                 >
                   <div className="flex items-start justify-between space-x-3">
                     <div className="flex items-start space-x-3 flex-1 min-w-0">
                       <div className="flex-shrink-0 mt-0.5">
-                        {getNotificationIcon(notification.type)}
+                        {getNotificationIcon(notification.type || "SYSTEM")}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="text-sm font-medium truncate">
