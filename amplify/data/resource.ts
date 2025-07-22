@@ -2,100 +2,248 @@ import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 import { sendEmail } from "../functions/send-mail/resource.js";
 
 /*== Data ===============================================================
-The section below creates a database table with fields.
+The section below creates a database table with fields for citizen supervision platform.
 =========================================================================*/
 const schema = a
   .schema({
-    // Blog
-    Blog: a.model({
-      title: a.string(),
-      imgUrl: a.string(),
-      content: a.string(), // markdown content
-      category: a.string(),
-      tags: a.string().array(),
-      createdAt: a.datetime(),
-      updatedAt: a.datetime(),
-    }),
-
-    // Shop
-    ProductType: a.model({
-      name: a.string().required(),
-      description: a.string(),
-      products: a.hasMany("Product", "productTypeId"),
-      createdAt: a.datetime(),
-      updatedAt: a.datetime(),
-    }),
-
-    Product: a.model({
-      name: a.string().required(),
-      description: a.string(),
-      sku: a.string(), // Stock keeping unit
-      thumbnailImageUrl: a.string(),
-      isActive: a.boolean().default(true),
-      primaryAttributeId: a.id(),
-      productTypeId: a.id(),
-      productType: a.belongsTo("ProductType", "productTypeId"),
-      variants: a.hasMany("ProductVariant", "productId"),
-      orderProducts: a.hasMany("OrderProduct", "productId"),
-      tags: a.string().array(), // Store tags for search
-      createdAt: a.datetime(),
-      updatedAt: a.datetime(),
-    }),
-
-    Attribute: a.model({
-      name: a.string().required(),
-      type: a.enum(["text", "color"]),
-      options: a.json(), // Store options for select attributes
-    }),
-
-    ProductVariant: a.model({
-      productId: a.id(),
-      product: a.belongsTo("Product", "productId"),
-      name: a.string(), // Variant name
-      price: a.float(), // Variant-specific price
-      discountPrice: a.float(), // Add discount price
-      stock: a.integer(), // Variant-specific stock
-      attributes: a.string(), // JSON stringified variant attributes
-      images: a.string().array(),
-      isActive: a.boolean().default(true),
-      createdAt: a.datetime(),
-      updatedAt: a.datetime(),
-    }),
-
-    Order: a.model({
-      orderNumber: a.string().required(),
-      customerName: a.string().required(),
-      customerEmail: a.string().required(),
-      status: a.enum([
-        "pending",
-        "processing",
-        "shipped",
-        "delivered",
-        "cancelled",
+    // Civil Servant Management
+    CivilServant: a
+      .model({
+        name: a.string().required(),
+        position: a.string().required(),
+        department: a.string().required(),
+        location: a.string(),
+        profileImage: a.string(),
+        contactInfo: a.json(), // Store contact information as JSON
+        obligations: a.hasMany("Obligation", "civilServantId"),
+        kpis: a.hasMany("KPI", "civilServantId"),
+        punchCardData: a.hasMany("PunchCard", "civilServantId"),
+        supervisors: a.hasMany("Supervision", "civilServantId"),
+        createdAt: a.datetime(),
+        updatedAt: a.datetime(),
+      })
+      .secondaryIndexes((index) => [
+        index("department"),
+        index("position"),
+        index("location"),
       ]),
-      totalAmount: a.float().required(),
-      shippingAddress: a.string(),
-      paymentInfo: a.string(),
-      orderProducts: a.hasMany("OrderProduct", "orderId"),
-      createdAt: a.datetime(),
-      updatedAt: a.datetime(),
-    }),
 
-    OrderProduct: a.model({
-      orderId: a.id(),
-      order: a.belongsTo("Order", "orderId"),
-      productId: a.id(),
-      product: a.belongsTo("Product", "productId"),
-      quantity: a.integer().required(),
-      priceAtPurchase: a.float().required(),
-    }),
+    // Obligation Tracking
+    Obligation: a
+      .model({
+        title: a.string().required(),
+        description: a.string().required(),
+        category: a.enum([
+          "CAMPAIGN_PROMISE",
+          "WORK_OBLIGATION",
+          "PUBLIC_COMMITMENT",
+        ]),
+        status: a.enum([
+          "PENDING",
+          "IN_PROGRESS",
+          "COMPLETED",
+          "OVERDUE",
+          "CANCELLED",
+        ]),
+        deadline: a.date(),
+        evidence: a.string().array(), // Array of evidence URLs/references
+        civilServantId: a.id().required(),
+        civilServant: a.belongsTo("CivilServant", "civilServantId"),
+        updates: a.hasMany("ObligationUpdate", "obligationId"),
+        createdBy: a.id().required(), // User ID who created the obligation
+        createdAt: a.datetime(),
+        updatedAt: a.datetime(),
+      })
+      .secondaryIndexes((index) => [
+        index("civilServantId"),
+        index("createdBy"),
+        index("status"),
+        index("category"),
+      ]),
 
-    // User settings
+    ObligationUpdate: a
+      .model({
+        obligationId: a.id().required(),
+        obligation: a.belongsTo("Obligation", "obligationId"),
+        status: a.enum([
+          "PENDING",
+          "IN_PROGRESS",
+          "COMPLETED",
+          "OVERDUE",
+          "CANCELLED",
+        ]),
+        notes: a.string(),
+        evidence: a.string().array(),
+        updatedBy: a.id().required(), // User ID who made the update
+        createdAt: a.datetime(),
+      })
+      .secondaryIndexes((index) => [index("obligationId"), index("updatedBy")]),
+
+    // KPI Management
+    KPI: a
+      .model({
+        title: a.string().required(),
+        description: a.string(),
+        target: a.float().required(),
+        current: a.float().default(0),
+        unit: a.string().required(),
+        deadline: a.date().required(),
+        civilServantId: a.id().required(),
+        civilServant: a.belongsTo("CivilServant", "civilServantId"),
+        updates: a.hasMany("KPIUpdate", "kpiId"),
+        createdBy: a.id().required(), // User ID who created the KPI
+        createdAt: a.datetime(),
+        updatedAt: a.datetime(),
+      })
+      .secondaryIndexes((index) => [
+        index("civilServantId"),
+        index("createdBy"),
+        index("deadline"),
+      ]),
+
+    KPIUpdate: a
+      .model({
+        kpiId: a.id().required(),
+        kpi: a.belongsTo("KPI", "kpiId"),
+        previousValue: a.float().required(),
+        newValue: a.float().required(),
+        notes: a.string(),
+        evidence: a.string().array(),
+        updatedBy: a.id().required(), // User ID who made the update
+        createdAt: a.datetime(),
+      })
+      .secondaryIndexes((index) => [index("kpiId"), index("updatedBy")]),
+
+    // Punch Card System
+    PunchCard: a
+      .model({
+        date: a.date().required(),
+        checkIn: a.time(),
+        checkOut: a.time(),
+        status: a.enum(["PRESENT", "ABSENT", "LATE", "EARLY_LEAVE", "HOLIDAY"]),
+        notes: a.string(),
+        civilServantId: a.id().required(),
+        civilServant: a.belongsTo("CivilServant", "civilServantId"),
+        createdAt: a.datetime(),
+        updatedAt: a.datetime(),
+      })
+      .secondaryIndexes((index) => [
+        index("civilServantId"),
+        index("date"),
+        index("status"),
+      ]),
+
+    // Citizen Points System
+    CitizenPoints: a
+      .model({
+        userId: a.id().required(), // Cognito User ID
+        balance: a.integer().default(0),
+        totalEarned: a.integer().default(0),
+        totalSpent: a.integer().default(0),
+        transactions: a.hasMany("PointTransaction", "citizenPointsId"),
+        createdAt: a.datetime(),
+        updatedAt: a.datetime(),
+      })
+      .secondaryIndexes((index) => [index("userId")]),
+
+    PointTransaction: a
+      .model({
+        citizenPointsId: a.id().required(),
+        citizenPoints: a.belongsTo("CitizenPoints", "citizenPointsId"),
+        type: a.enum(["EARNED", "SPENT", "REFUNDED"]),
+        amount: a.integer().required(),
+        reason: a.string().required(),
+        referenceId: a.string(), // Reference to related entity (obligation, KPI, etc.)
+        referenceType: a.string(), // Type of reference (obligation, kpi, reward, etc.)
+        createdAt: a.datetime(),
+      })
+      .secondaryIndexes((index) => [index("citizenPointsId"), index("type")]),
+
+    // Rewards System
+    Reward: a
+      .model({
+        title: a.string().required(),
+        description: a.string().required(),
+        pointCost: a.integer().required(),
+        category: a.enum([
+          "DIGITAL_BADGE",
+          "NFT_MEDAL",
+          "PHYSICAL_ITEM",
+          "EXPERIENCE",
+        ]),
+        isActive: a.boolean().default(true),
+        stock: a.integer(),
+        image: a.string(),
+        redemptions: a.hasMany("RewardRedemption", "rewardId"),
+        createdAt: a.datetime(),
+        updatedAt: a.datetime(),
+      })
+      .secondaryIndexes((index) => [index("category"), index("pointCost")]),
+
+    RewardRedemption: a
+      .model({
+        rewardId: a.id().required(),
+        reward: a.belongsTo("Reward", "rewardId"),
+        userId: a.id().required(), // Cognito User ID
+        pointsSpent: a.integer().required(),
+        status: a.enum(["PENDING", "PROCESSING", "COMPLETED", "CANCELLED"]),
+        deliveryInfo: a.json(), // Delivery information for physical items
+        createdAt: a.datetime(),
+        updatedAt: a.datetime(),
+      })
+      .secondaryIndexes((index) => [
+        index("rewardId"),
+        index("userId"),
+        index("status"),
+      ]),
+
+    // Supervision Relationships
+    Supervision: a
+      .model({
+        userId: a.id().required(), // Cognito User ID of the citizen
+        civilServantId: a.id().required(),
+        civilServant: a.belongsTo("CivilServant", "civilServantId"),
+        isActive: a.boolean().default(true),
+        preferences: a.json(), // User preferences for this supervision
+        createdAt: a.datetime(),
+        updatedAt: a.datetime(),
+      })
+      .secondaryIndexes((index) => [index("userId"), index("civilServantId")]),
+
+    // Notifications
+    Notification: a
+      .model({
+        userId: a.id().required(), // Cognito User ID
+        title: a.string().required(),
+        message: a.string().required(),
+        type: a.enum(["DEADLINE", "UPDATE", "ACHIEVEMENT", "SYSTEM"]),
+        isRead: a.boolean().default(false),
+        referenceId: a.string(), // Reference to related entity
+        referenceType: a.string(), // Type of reference
+        createdAt: a.datetime(),
+      })
+      .secondaryIndexes((index) => [index("userId"), index("type")]),
+
+    // User Preferences
+    UserPreferences: a
+      .model({
+        userId: a.id().required(), // Cognito User ID
+        language: a.string().default("en"),
+        theme: a.enum(["light", "dark", "system"]),
+        notifications: a.json(), // Notification preferences
+        dashboardLayout: a.json(), // Dashboard customization
+        createdAt: a.datetime(),
+        updatedAt: a.datetime(),
+      })
+      .secondaryIndexes((index) => [index("userId")]),
+
+    // System Settings
     Settings: a.model({
-      key: a.string(),
-      value: a.string(),
+      key: a.string().required(),
+      value: a.string().required(),
       description: a.string(),
       group: a.string(),
+      isPublic: a.boolean().default(false), // Whether setting is publicly readable
       createdAt: a.datetime(),
       updatedAt: a.datetime(),
     }),
@@ -115,11 +263,12 @@ const schema = a
       .handler(a.handler.function(sendEmail)),
   })
   .authorization((allow) => [
-    // allow.publicApiKey().to(["read"]),
+    // Public read access for civil servant profiles
     allow.guest().to(["read"]),
+    // Authenticated users can read and create/update most data
+    allow.authenticated().to(["read", "create", "update"]),
+    // Owner access for user-specific data
     allow.owner(),
-    allow.authenticated("identityPool").to(["read"]),
-    allow.authenticated(),
   ]);
 
 export type Schema = ClientSchema<typeof schema>;
