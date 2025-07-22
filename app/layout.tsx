@@ -1,10 +1,5 @@
 import "./globals.css";
-
-import { Amplify } from "aws-amplify";
-Amplify.configure(outputs, { ssr: true });
-import outputs from "@/amplify_outputs.json";
-
-// Components
+import { Providers } from "./providers";
 
 // Google
 import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
@@ -20,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} bg-background`}>
-        {children}
+        <Providers>{children}</Providers>
 
         {/* Google tags */}
         {/* <GoogleTagManager gtmId="GTM-xxx" />

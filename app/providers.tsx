@@ -2,6 +2,14 @@
 
 import { ThemeProvider } from "next-themes";
 import { ReactNode, useEffect, useState } from "react";
+import { Authenticator } from "@aws-amplify/ui-react";
+import { Amplify } from "aws-amplify";
+import outputs from "@/amplify_outputs.json";
+import "@aws-amplify/ui-react/styles.css";
+import { Toaster } from "@/components/ui/sonner";
+
+// Configure Amplify
+Amplify.configure(outputs);
 
 export function Providers({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -11,7 +19,10 @@ export function Providers({ children }: { children: ReactNode }) {
   }
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      {children}
+      <Authenticator.Provider>
+        {children}
+        <Toaster />
+      </Authenticator.Provider>
     </ThemeProvider>
   );
 }
